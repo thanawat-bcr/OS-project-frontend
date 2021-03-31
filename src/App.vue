@@ -21,8 +21,8 @@ export default {
   data() {
     return {
       connection: {
-        // host: "172.16.167.2",
-        host: "127.0.0.1",
+        host: "172.16.167.2",
+        // host: "127.0.0.1",
         port: 9001,
         endpoint: "",
         clean: true, // Reserved session
