@@ -156,7 +156,7 @@ export default {
     console.log('localIpTest', localIpTest);
     const IpTest = await axios.get("http://192.168.1.37:3000/test");
     console.log('IpTest', IpTest);
-    const temp = await axios.get("http://192.168.1.35:3000/temp/date", {
+    const temp = await axios.get("http://192.168.1.37:3000/temp/date", {
       params: { date: tmpDate[2], month: tmpDate[1], year: tmpDate[0] },
     });
     console.log(temp.data.log);
