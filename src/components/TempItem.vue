@@ -69,7 +69,7 @@ export default {
   },
   methods: {
     async onDelete() {
-      await axios.get("http://localhost:3000/temp/remove", {
+      await axios.get("http://192.168.1.37:3000/temp/remove", {
         params: { id: this.id },
       });
       location.reload();
@@ -78,7 +78,7 @@ export default {
       this.editMode = true;
     },
     async onSubmit() {
-      await axios.get("http://localhost:3000/temp/update", {
+      await axios.get("http://192.168.1.37:3000/temp/update", {
         params: {
           id: this.id,
           temp: this.updated.temp,
