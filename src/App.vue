@@ -10,20 +10,48 @@
     >
       <div>{{ msg.temp }} °C</div>
       <div>{{ msg.timestamp }}</div>
+      <div class="tempList" v-if="showList">
+        <div class="calendar">
+          <label for="date">Date: </label>
+          <input
+            type="date"
+            name="date"
+            id="date"
+            v-model="selectedDate"
+            @change="onSelectDate"
+          />
+        </div>
+        <div class="close" @click="showList = false">x</div>
+        <TempItem
+          v-for="(temp, i) in temps"
+          :key="i"
+          :temp="temp.temp"
+          :date="temp.date"
+          :month="temp.month"
+          :year="temp.year"
+          :hour="temp.hour"
+          :minute="temp.minute"
+          :second="temp.second"
+          :id="temp._id"
+        />
+      </div>
     </div>
+    <div class="button" @click="onShowList">+</div>
   </div>
 </template>
 
 <script>
 import mqtt from "mqtt";
+import TempItem from "./components/TempItem";
+import axios from "axios";
 
 export default {
   data() {
     return {
       connection: {
-        host: "192.168.1.38",
+        // host: "192.168.1.37",
         // host: "172.16.167.2",
-        // host: "127.0.0.1",
+        host: "127.0.0.1",
         port: 9001,
         endpoint: "",
         clean: true, // Reserved session
@@ -54,17 +82,20 @@ export default {
       },
       subscribeSuccess: false,
       msg: {
-        temp: Math.round(Math.random() * 100),
-        timestamp: new Date(Date.now()).toString().split("G")[0],
+        temp: null,
+        timestamp: null,
       },
       color: {
         red: 255,
         green: 200,
         blue: 200,
       },
+      showList: false,
+      nowDate: new Date(),
+      selectedDate: null,
+      temps: [],
     };
   },
-
   methods: {
     createConnection() {
       const { host, port, endpoint, ...options } = this.connection;
@@ -95,15 +126,39 @@ export default {
       this.client.subscribe("temp");
       this.client.subscribe("timestamp");
     },
+    onShowList() {
+      this.showList = true;
+    },
+    async onSelectDate() {
+      console.log(this.selectedDate);
+      const tmpDate = this.selectedDate.split("-");
+      const temp = await axios.get("http://localhost:3000/temp/date", {
+        params: { date: tmpDate[2], month: tmpDate[1], year: tmpDate[0] },
+      });
+      console.log(temp.data.log);
+      this.temps = temp.data.log;
+    },
   },
-  mounted() {
+  async mounted() {
     this.createConnection();
     this.doSubscribe();
-    // Test color running
-    // setInterval(() => {
-    //   this.msg.temp = Math.round(Math.random() * 100);
-    //   this.msg.timestamp = new Date(Date.now()).toString().split("G")[0];
-    // }, 1000);
+    const month = this.nowDate.getMonth() + 1;
+    this.selectedDate =
+      this.nowDate.getFullYear() +
+      "-" +
+      (month < 10 ? "0" + month : month) +
+      "-" +
+      this.nowDate.getDate();
+    const tmpDate = this.selectedDate.split("-");
+    const temp = await axios.get("http://192.168.1.35:3000/temp/date", {
+      params: { date: tmpDate[2], month: tmpDate[1], year: tmpDate[0] },
+    });
+    console.log(temp.data.log);
+    this.temps = temp.data.log;
+  },
+
+  components: {
+    TempItem,
   },
 };
 </script>
@@ -130,5 +185,71 @@ export default {
   align-items: center;
   transition: 1s;
   font-size: 2rem;
+}
+.button {
+  position: fixed;
+  right: 5rem;
+  bottom: 5rem;
+  background: teal;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  color: white;
+  font-weight: 500;
+  font-size: 2rem;
+  transition: 200ms;
+  cursor: pointer;
+}
+.button:hover {
+  background: rgb(2, 184, 184);
+}
+.tempList {
+  height: 80vh;
+  width: 25rem;
+  position: fixed;
+  top: 50%;
+  left: 2rem;
+  transform: translateY(-50%);
+  overflow-y: auto;
+  background: white;
+  animation: fade 200ms;
+  box-shadow: 0 0 30px 10px rgba(255, 255, 255, 0.6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top:2rem;
+  /* justify-content: center; */
+}
+.close {
+  text-align: right;
+  font-size: 1.5rem;
+  font-weight: thin;
+  padding: 1rem;
+  cursor: pointer;
+  position: fixed;
+  top: 0;
+  right: 0;
+}
+
+.calendar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.calendar > label {
+  font-size: 1.5rem;
+  margin-right: 1rem;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 </style>
